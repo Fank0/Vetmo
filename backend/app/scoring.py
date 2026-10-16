@@ -13,6 +13,7 @@ class HeroRow:
     id: int
     localized_name: str
     roles: list[str]
+    name: str = ""  # npc_dota_hero_* (для портретов в UI)
 
 
 @dataclass

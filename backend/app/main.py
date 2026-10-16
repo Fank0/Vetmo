@@ -9,6 +9,7 @@ from .models import DraftRequest, DraftResponse, ExplainRequest, ExplainResponse
 from .db import Store
 from .scoring import HeroRow, score_candidate
 from .explain import build_explanation
+from .news import get_news
 from .rag import search_similar
 
 app = FastAPI(title="Dota 2 Drafter — Scoring API", version="1.0.0")
@@ -29,7 +30,7 @@ def health():
 def heroes():
     s = _store()
     hs = s.heroes()
-    return {"heroes": [{"id": h.id, "localized_name": h.localized_name, "roles": h.roles} for h in hs],
+    return {"heroes": [{"id": h.id, "name": h.name, "localized_name": h.localized_name, "roles": h.roles} for h in hs],
             "data_updated_at": s.data_updated_at(), "db_mode": s.mode}
 
 
@@ -98,6 +99,27 @@ def similar_scenarios(radiant: str = "", dire: str = "", team: str = "radiant"):
     ctx = search_similar(settings.QDRANT_URL, "draft_scenarios", _parse(radiant), _parse(dire), team) \
         if settings.ENABLE_RAG else []
     return {"results": ctx, "rag_enabled": settings.ENABLE_RAG}
+
+
+@app.get("/meta/top")
+def meta_top(limit: int = 10):
+    """Топ героев по общему винрейту из БД (hero_stats) или seed. Для вкладки «Топ». Не выдумывает цифры."""
+    limit = max(1, min(limit, 25))
+    s = _store()
+    rows = []
+    for hid, h in s.hero_map().items():
+        wr = s.meta_wr(hid)
+        if wr is not None:
+            rows.append({"hero_id": hid, "localized_name": h.localized_name,
+                         "roles": h.roles, "win_rate": round(float(wr), 4)})
+    rows.sort(key=lambda x: (-x["win_rate"], x["hero_id"]))
+    return {"top": rows[:limit], "data_updated_at": s.data_updated_at(), "db_mode": s.mode}
+
+
+@app.get("/news")
+def news(limit: int = 10):
+    items = get_news(limit)
+    return {"news": items, "source_note": "Fallback-лента. Прод: RSS dota2.com (см. backend/app/news.py)."}
 
 
 @app.exception_handler(HTTPException)

@@ -53,3 +53,22 @@ def test_explain_does_not_change_score():
     ex = client.post("/explain", json=dict(BASE, hero_id=rec["hero_id"])).json()
     assert ex["facts_used"]["score"] == rec["score"]
     assert ex["llm_generated"] is False
+
+
+def test_heroes_have_npc_names_for_portraits():
+    hs = client.get("/heroes").json()["heroes"]
+    assert all(h.get("name", "").startswith("npc_dota_hero_") for h in hs)
+
+
+def test_meta_top_sorted():
+    top = client.get("/meta/top?limit=5").json()
+    assert len(top["top"]) == 5
+    wrs = [x["win_rate"] for x in top["top"]]
+    assert wrs == sorted(wrs, reverse=True)
+    assert all(0 < w <= 1 for w in wrs)
+
+
+def test_news_list():
+    n = client.get("/news").json()
+    assert len(n["news"]) >= 1
+    assert all(x.get("url", "").startswith("http") for x in n["news"])

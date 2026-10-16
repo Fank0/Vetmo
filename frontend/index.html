@@ -3,64 +3,139 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dota 2 Drafter — MVP</title>
+<title>Dota 2 Drafter — меню</title>
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<header>
-  <h1>Dota 2 Drafter <span class="badge">MVP statistical</span></h1>
-  <div class="conn">
-    <label>Backend: <input id="backendUrl" size="26" value="http://localhost:8000"></label>
-    <button id="refreshHeroes">Обновить героев</button>
-    <span id="dbMode" class="muted"></span>
+<a class="skip" href="#recommendBtn">Перейти к рекомендациям</a>
+<header class="topbar">
+  <div class="brand">
+    <span class="logo" aria-hidden="true">◈</span>
+    <h1>Dota 2 Drafter <span class="badge">statistical</span></h1>
+  </div>
+  <nav class="tabs" aria-label="Разделы меню">
+    <button class="tab active" data-tab="draft" type="button" aria-selected="true">⚔ Драфт</button>
+    <button class="tab" data-tab="top" type="button" aria-selected="false">🏆 Топ героев</button>
+    <button class="tab" data-tab="news" type="button" aria-selected="false">📰 Новости</button>
+    <button class="tab" data-tab="settings" type="button" aria-selected="false">⚙ Настройки</button>
+  </nav>
+  <div class="top-actions">
+    <span id="dbMode" class="muted" aria-live="polite"></span>
+    <a class="btn ghost" href="overlay.html" target="_blank" rel="noopener" title="Компактный оверлей поверх игры">⧉ Оверлей</a>
   </div>
 </header>
 
 <main>
-  <section class="panel">
-    <h2>1. Драфт</h2>
-    <div class="teams">
-      <div class="team radiant">
-        <h3>Radiant</h3>
-        <label>Пики</label><div id="radiantPicks" class="chips"></div>
-        <label>Баны</label><div id="radiantBans" class="chips"></div>
+  <!-- ============ ДРАФТ ============ -->
+  <section id="tab-draft" class="tabpanel" aria-label="Драфт">
+    <div class="cols3">
+      <div class="panel" aria-labelledby="draftH">
+        <h2 id="draftH">Драфт</h2>
+        <div class="teams">
+          <div class="team radiant">
+            <h3>Radiant</h3>
+            <span class="slot-hint" id="radiantCount"></span>
+            <label>Пики (до 5)</label><div id="radiantPicks" class="chips" aria-live="polite"></div>
+            <label>Баны</label><div id="radiantBans" class="chips" aria-live="polite"></div>
+          </div>
+          <div class="team dire">
+            <h3>Dire</h3>
+            <span class="slot-hint" id="direCount"></span>
+            <label>Пики (до 5)</label><div id="direPicks" class="chips" aria-live="polite"></div>
+            <label>Баны</label><div id="direBans" class="chips" aria-live="polite"></div>
+          </div>
+        </div>
+        <div class="controls">
+          <label for="teamToPick">Следующий пик:
+            <select id="teamToPick"><option value="radiant">Radiant</option><option value="dire">Dire</option></select>
+          </label>
+          <label for="roleFilter">Роль: <select id="roleFilter"><option value="">— любая —</option></select></label>
+          <label for="limit">Лимит: <select id="limit"><option>5</option><option selected>10</option><option>15</option></select></label>
+          <button id="recommendBtn" class="primary" type="button">Рекомендовать пик</button>
+          <button id="retryBtn" class="hidden" type="button">Повторить запрос</button>
+          <button id="clearBtn" type="button">Сбросить</button>
+        </div>
+        <div id="warnStale" class="warn hidden" role="alert"></div>
+        <div id="warnLow" class="warn low hidden" role="alert"></div>
       </div>
-      <div class="team dire">
-        <h3>Dire</h3>
-        <label>Пики</label><div id="direPicks" class="chips"></div>
-        <label>Баны</label><div id="direBans" class="chips"></div>
+
+      <div class="panel" aria-labelledby="heroesH">
+        <h2 id="heroesH">Герои <span id="heroCount" class="muted"></span></h2>
+        <p class="muted small">Список и статистика — из database через API, в UI ничего не захардкожено.</p>
+        <label class="sr" for="search">Поиск героя</label>
+        <input id="search" placeholder="Вбей героя…" autocomplete="off" type="search">
+        <div class="pick-target">
+          <label for="pickTarget">Добавлять в:</label>
+          <select id="pickTarget">
+            <option value="radiantPicks">Radiant пик</option><option value="direPicks">Dire пик</option>
+            <option value="radiantBans">Radiant бан</option><option value="direBans">Dire бан</option>
+          </select>
+        </div>
+        <div id="heroGrid" class="grid" role="list"></div>
+      </div>
+
+      <div class="panel" aria-labelledby="recH">
+        <h2 id="recH">Контрпики</h2>
+        <div id="status" class="muted" aria-live="polite">Выберите пики/баны и нажмите «Рекомендовать пик».</div>
+        <div id="loading" class="hidden" aria-busy="true">⏳ Считаем (SQL + scoring.py)…</div>
+        <div id="recList"></div>
       </div>
     </div>
-    <div class="controls">
-      <label>Следующий пик:
-        <select id="teamToPick"><option value="radiant">Radiant</option><option value="dire">Dire</option></select>
-      </label>
-      <label>Роль: <select id="roleFilter"><option value="">— любая —</option></select></label>
-      <label>Лимит: <select id="limit"><option>5</option><option selected>10</option><option>15</option></select></label>
-      <button id="recommendBtn" class="primary">Рекомендовать пик</button>
-      <button id="clearBtn">Сбросить</button>
-    </div>
-    <div id="warnStale" class="warn hidden"></div>
   </section>
 
-  <section class="panel">
-    <h2>2. Герои <span id="heroCount" class="muted"></span></h2>
-    <input id="search" placeholder="Поиск героя…" autocomplete="off">
-    <div class="pick-target">
-      Добавлять в:
-      <select id="pickTarget">
-        <option value="radiantPicks">Radiant пик</option><option value="direPicks">Dire пик</option>
-        <option value="radiantBans">Radiant бан</option><option value="direBans">Dire бан</option>
-      </select>
+  <!-- ============ ТОП ============ -->
+  <section id="tab-top" class="tabpanel hidden" aria-label="Самые выигрышные герои">
+    <div class="panel narrow">
+      <h2>🏆 Самые выигрышные герои</h2>
+      <p class="muted small">Общий винрейт из database (<code>hero_stats</code>). Обновляется ETL, не вручную.</p>
+      <div class="controls">
+        <button id="reloadTop" class="primary" type="button">Обновить топ</button>
+        <span id="topUpdated" class="muted"></span>
+      </div>
+      <div id="topStatus" class="muted" aria-live="polite"></div>
+      <div id="topList" class="toplist"></div>
     </div>
-    <div id="heroGrid" class="grid"></div>
   </section>
 
-  <section class="panel">
-    <h2>3. Рекомендации</h2>
-    <div id="status" class="muted">Выберите пики/баны и нажмите «Рекомендовать пик».</div>
-    <div id="loading" class="hidden">Загрузка…</div>
-    <div id="recList"></div>
+  <!-- ============ НОВОСТИ ============ -->
+  <section id="tab-news" class="tabpanel hidden" aria-label="Новости игры">
+    <div class="panel narrow">
+      <h2>📰 Новости игры</h2>
+      <p class="muted small">Лента из backend (<code>GET /news</code>). Прод-вариант — RSS dota2.com.</p>
+      <div class="controls"><button id="reloadNews" class="primary" type="button">Обновить</button></div>
+      <div id="newsStatus" class="muted" aria-live="polite"></div>
+      <div id="newsList" class="newslist"></div>
+    </div>
+  </section>
+
+  <!-- ============ НАСТРОЙКИ ============ -->
+  <section id="tab-settings" class="tabpanel hidden" aria-label="Настройки">
+    <div class="panel narrow">
+      <h2>⚙ Настройки</h2>
+      <div class="form">
+        <label for="backendUrl">Backend API
+          <input id="backendUrl" size="30" value="http://localhost:8000">
+        </label>
+        <label for="defLimit">Лимит рекомендаций по умолчанию
+          <select id="defLimit"><option>5</option><option selected>10</option><option>15</option></select>
+        </label>
+        <label for="overlayOpacity">Прозрачность оверлея: <span id="opVal">92%</span>
+          <input id="overlayOpacity" type="range" min="60" max="100" value="92">
+        </label>
+        <div class="controls">
+          <button id="saveSettings" class="primary" type="button">Сохранить</button>
+          <button id="refreshHeroes" type="button">Перезагрузить героев</button>
+          <a class="btn ghost" href="overlay.html" target="_blank" rel="noopener">⧉ Открыть оверлей</a>
+        </div>
+        <div id="setStatus" class="muted" aria-live="polite"></div>
+        <h3>Как повесить оверлей поверх Dota 2</h3>
+        <ol class="muted small">
+          <li>OBS → Sources → Browser → URL <code>http://localhost:8080/overlay.html</code>, ширина 1400×300.</li>
+          <li>Или открой <code>overlay.html</code> в браузере → F11 (полный экран) → поверх игры в оконном режиме.</li>
+          <li>Одна кнопка <b>☰ Меню</b> в оверлее возвращает сюда.</li>
+        </ol>
+      </div>
+    </div>
   </section>
 </main>
 

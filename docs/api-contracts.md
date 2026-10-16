@@ -109,3 +109,9 @@
 ```
 
 - 422 — ошибка валидации; 404 — неизвестный роут; 503 — БД недоступна (с fallback на seed в MVP).
+
+## 7. Дополнительные endpoints меню (v1.1)
+
+- `GET /heroes` → теперь включает `name` (`npc_dota_hero_*`) для портретов Steam CDN в UI.
+- `GET /meta/top?limit=10` → `{ top: [{hero_id, localized_name, roles, win_rate}], data_updated_at, db_mode }`, сортировка по `win_rate` desc. Цифры из `hero_stats`/seed, не хардкод.
+- `GET /news?limit=10` → `{ news: [{id, title, summary, url, published_at, source}] }`. Пока fallback-лента, прод — RSS dota2.com.

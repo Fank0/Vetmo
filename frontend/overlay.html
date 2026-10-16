@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Drafter Overlay</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="overlay">
+<div class="ov-shell">
+  <div class="ov-top">
+    <a class="btn ghost menu-btn" href="index.html" title="Открыть основное меню">☰ Меню</a>
+    <div class="ov-teams-toggle" role="group" aria-label="Чей пик">
+      <button id="ovRadiant" class="on" type="button">Radiant пикает</button>
+      <button id="ovDire" type="button">Dire пикает</button>
+    </div>
+    <span id="ovStatus" class="muted" aria-live="polite">…</span>
+    <span id="ovDot" class="dot" title="Статус backend"></span>
+  </div>
+  <div class="ov-body">
+    <aside class="ov-side left" aria-label="Меню Radiant">
+      <h3>Radiant</h3>
+      <label class="sr" for="ovSearchR">Герой Radiant</label>
+      <input id="ovSearchR" type="search" placeholder="Герой Radiant…" autocomplete="off">
+      <div id="ovListR" class="ov-picks"></div>
+      <div id="ovGridR" class="ov-grid"></div>
+    </aside>
+    <section class="ov-center" aria-label="Контрпики">
+      <h3 id="ovTitle">Против кого контрим</h3>
+      <div id="ovLoading" class="hidden">⏳…</div>
+      <div id="ovRecs" class="ov-recs"></div>
+    </section>
+    <aside class="ov-side right" aria-label="Меню Dire">
+      <h3>Dire</h3>
+      <label class="sr" for="ovSearchD">Герой Dire</label>
+      <input id="ovSearchD" type="search" placeholder="Герой Dire…" autocomplete="off">
+      <div id="ovListD" class="ov-picks"></div>
+      <div id="ovGridD" class="ov-grid"></div>
+    </aside>
+  </div>
+</div>
+<script src="overlay.js"></script>
+</body>
+</html>

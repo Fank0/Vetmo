@@ -36,11 +36,11 @@ class Store:
     def heroes(self) -> list[HeroRow]:
         if self.mode == "postgres" and self.conn is not None:
             try:
-                rows = self.conn.execute("SELECT id, localized_name, roles FROM heroes").fetchall()
-                return [HeroRow(id=r[0], localized_name=r[1], roles=list(r[2] or [])) for r in rows]
+                rows = self.conn.execute("SELECT id, name, localized_name, roles FROM heroes").fetchall()
+                return [HeroRow(id=r[0], localized_name=r[2], roles=list(r[3] or []), name=r[1] or "") for r in rows]
             except Exception:
                 pass
-        return [HeroRow(id=h["id"], localized_name=h["localized_name"], roles=h["roles"]) for h in seed.SEED_HEROES]
+        return [HeroRow(id=h["id"], localized_name=h["localized_name"], roles=h["roles"], name=h.get("name", "")) for h in seed.SEED_HEROES]
 
     def hero_map(self) -> dict[int, HeroRow]:
         return {h.id: h for h in self.heroes()}
