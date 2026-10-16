@@ -1,0 +1,47 @@
+{
+  "name": "dota2-initial-load",
+  "nodes": [
+    {
+      "parameters": { "rule": { "interval": [{ "field": "hours", "hoursInterval": 24 }] } },
+      "name": "Daily trigger (manual run OK)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.OPENDOTA_BASE_URL }}/heroes",
+        "options": { "timeout": 15000, "response": { "response": { "responseFormat": "json" } } }
+      },
+      "name": "OpenDota GET /heroes",
+      "type": "n8n-nodes-base.httpRequest",
+      "retryOnFail": true,
+      "maxTries": 4,
+      "position": [420, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO heroes(id,name,localized_name,roles,updated_at) VALUES ($1,$2,$3,$4,now()) ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, localized_name=EXCLUDED.localized_name, roles=EXCLUDED.roles, updated_at=now();",
+        "options": {}
+      },
+      "name": "Postgres upsert heroes (configure credentials)",
+      "type": "n8n-nodes-base.postgres",
+      "position": [640, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.OPENDOTA_BASE_URL }}/heroes/1/matchups",
+        "options": { "timeout": 15000 }
+      },
+      "name": "Template: loop hero matchups (SplitInBatches)",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [640, 480]
+    }
+  ],
+  "connections": {
+    "Daily trigger (manual run OK)": { "main": [[{ "node": "OpenDota GET /heroes", "type": "main", "index": 0 }]] },
+    "OpenDota GET /heroes": { "main": [[{ "node": "Postgres upsert heroes (configure credentials)", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "timezone": "Europe/Moscow" },
+  "pinData": {}
+}

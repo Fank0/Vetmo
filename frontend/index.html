@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dota 2 Drafter — MVP</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header>
+  <h1>Dota 2 Drafter <span class="badge">MVP statistical</span></h1>
+  <div class="conn">
+    <label>Backend: <input id="backendUrl" size="26" value="http://localhost:8000"></label>
+    <button id="refreshHeroes">Обновить героев</button>
+    <span id="dbMode" class="muted"></span>
+  </div>
+</header>
+
+<main>
+  <section class="panel">
+    <h2>1. Драфт</h2>
+    <div class="teams">
+      <div class="team radiant">
+        <h3>Radiant</h3>
+        <label>Пики</label><div id="radiantPicks" class="chips"></div>
+        <label>Баны</label><div id="radiantBans" class="chips"></div>
+      </div>
+      <div class="team dire">
+        <h3>Dire</h3>
+        <label>Пики</label><div id="direPicks" class="chips"></div>
+        <label>Баны</label><div id="direBans" class="chips"></div>
+      </div>
+    </div>
+    <div class="controls">
+      <label>Следующий пик:
+        <select id="teamToPick"><option value="radiant">Radiant</option><option value="dire">Dire</option></select>
+      </label>
+      <label>Роль: <select id="roleFilter"><option value="">— любая —</option></select></label>
+      <label>Лимит: <select id="limit"><option>5</option><option selected>10</option><option>15</option></select></label>
+      <button id="recommendBtn" class="primary">Рекомендовать пик</button>
+      <button id="clearBtn">Сбросить</button>
+    </div>
+    <div id="warnStale" class="warn hidden"></div>
+  </section>
+
+  <section class="panel">
+    <h2>2. Герои <span id="heroCount" class="muted"></span></h2>
+    <input id="search" placeholder="Поиск героя…" autocomplete="off">
+    <div class="pick-target">
+      Добавлять в:
+      <select id="pickTarget">
+        <option value="radiantPicks">Radiant пик</option><option value="direPicks">Dire пик</option>
+        <option value="radiantBans">Radiant бан</option><option value="direBans">Dire бан</option>
+      </select>
+    </div>
+    <div id="heroGrid" class="grid"></div>
+  </section>
+
+  <section class="panel">
+    <h2>3. Рекомендации</h2>
+    <div id="status" class="muted">Выберите пики/баны и нажмите «Рекомендовать пик».</div>
+    <div id="loading" class="hidden">Загрузка…</div>
+    <div id="recList"></div>
+  </section>
+</main>
+
+<footer>
+  <span id="dataUpdated" class="muted"></span>
+  <span class="muted">Матчап — статистическая ассоциация, не гарантия победы. Score считает код, LLM только объясняет.</span>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

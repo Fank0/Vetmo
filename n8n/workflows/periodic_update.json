@@ -1,0 +1,45 @@
+{
+  "name": "dota2-periodic-update",
+  "nodes": [
+    {
+      "parameters": { "rule": { "interval": [{ "field": "hours", "hoursInterval": 6 }] } },
+      "name": "Every 6h",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.OPENDOTA_BASE_URL }}/heroStats",
+        "options": { "timeout": 15000 }
+      },
+      "name": "OpenDota GET /heroStats",
+      "type": "n8n-nodes-base.httpRequest",
+      "retryOnFail": true,
+      "maxTries": 4,
+      "position": [420, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO sync_meta(key,value,updated_at) VALUES ('last_successful_sync', now()::text, now()) ON CONFLICT (key) DO UPDATE SET value=EXCLUDED.value, updated_at=now();"
+      },
+      "name": "Postgres mark sync (credentials required)",
+      "type": "n8n-nodes-base.postgres",
+      "position": [640, 300]
+    },
+    {
+      "parameters": {
+        "url": "=http://backend:8000/health",
+        "options": { "timeout": 10000 }
+      },
+      "name": "Backend health check",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [640, 480]
+    }
+  ],
+  "connections": {
+    "Every 6h": { "main": [[{ "node": "OpenDota GET /heroStats", "type": "main", "index": 0 }]] },
+    "OpenDota GET /heroStats": { "main": [[{ "node": "Postgres mark sync (credentials required)", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "timezone": "Europe/Moscow" }
+}

@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Node (если frontend мигрирует на React/Vite)
+node_modules/
+dist/
+.vite/
+
+# Env & secrets — никогда не коммитить
+.env
+.env.local
+*.key
+*.pem
+
+# Docker volumes / data
+postgres_data/
+n8n_data/
+qdrant_data/
+
+# n8n credentials (экспорты не должны содержать секретов)
+n8n/credentials/
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/settings.json
+
+# Logs & tmp
+*.log
+tmp/

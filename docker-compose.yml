@@ -1,0 +1,88 @@
+name: dota2-drafter
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-drafter}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme_local_only}
+      POSTGRES_DB: ${POSTGRES_DB:-dota2_drafter}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infra/postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-drafter} -d ${POSTGRES_DB:-dota2_drafter}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://drafter:changeme_local_only@postgres:5432/dota2_drafter}
+      OPENDOTA_BASE_URL: ${OPENDOTA_BASE_URL:-https://api.opendota.com/api}
+      QDRANT_URL: ${QDRANT_URL:-http://qdrant:6333}
+      ENABLE_RAG: ${ENABLE_RAG:-false}
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health').read()"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-8080}:80"
+    depends_on:
+      - backend
+
+  n8n:
+    image: n8nio/n8n:latest
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      GENERIC_TIMEZONE: ${GENERIC_TIMEZONE:-Europe/Moscow}
+      N8N_BASIC_AUTH_ACTIVE: ${N8N_BASIC_AUTH_ACTIVE:-true}
+      N8N_BASIC_AUTH_USER: ${N8N_BASIC_AUTH_USER:-admin}
+      N8N_BASIC_AUTH_PASSWORD: ${N8N_BASIC_AUTH_PASSWORD:-changeme_n8n_local}
+      DB_TYPE: sqlite
+      BACKEND_URL: http://backend:8000
+      OPENDOTA_BASE_URL: ${OPENDOTA_BASE_URL:-https://api.opendota.com/api}
+    ports:
+      - "${N8N_PORT:-5678}:5678"
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./n8n/workflows:/home/node/workflows:ro
+    depends_on:
+      - backend
+      - postgres
+
+  # --- OPTIONAL: включается только как `docker compose --profile rag up` ---
+  # DoD №10: MVP обязан работать БЕЗ qdrant.
+  qdrant:
+    image: qdrant/qdrant:latest
+    restart: unless-stopped
+    ports:
+      - "${QDRANT_PORT:-6333}:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    profiles: ["rag"]
+
+volumes:
+  postgres_data:
+  n8n_data:
+  qdrant_data:

@@ -1,0 +1,36 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "compose: up",
+      "type": "shell",
+      "command": "docker compose up --build",
+      "problemMatcher": []
+    },
+    {
+      "label": "compose: up + rag",
+      "type": "shell",
+      "command": "docker compose --profile rag up --build",
+      "problemMatcher": []
+    },
+    {
+      "label": "backend: install & test",
+      "type": "shell",
+      "command": "py -3.12 -m pip install -r backend/requirements.txt; py -3.12 -m pytest backend/tests -v",
+      "problemMatcher": []
+    },
+    {
+      "label": "backend: run local",
+      "type": "shell",
+      "command": "py -3.12 -m uvicorn app.main:app --app-dir backend --port 8000 --reload",
+      "problemMatcher": []
+    },
+    {
+      "label": "etl: initial load",
+      "type": "shell",
+      "command": "py -3.12 -m app.loader --once",
+      "options": { "cwd": "backend" },
+      "problemMatcher": []
+    }
+  ]
+}

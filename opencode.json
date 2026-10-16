@@ -1,0 +1,12 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "auto",
+  "instructions": [
+    "docs/architecture.md",
+    "docs/api-contracts.md",
+    "AGENTS.md"
+  ],
+  "permission": {
+    "deny": [".env", "n8n/credentials/*", "*.key", "*.pem"]
+  }
+}

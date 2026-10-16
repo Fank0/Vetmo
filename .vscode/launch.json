@@ -1,0 +1,21 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Backend: FastAPI",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "uvicorn",
+      "args": ["app.main:app", "--app-dir", "backend", "--port", "8000", "--reload"],
+      "justMyCode": true
+    },
+    {
+      "name": "Pytest: backend",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "args": ["backend/tests", "-v"],
+      "justMyCode": true
+    }
+  ]
+}
